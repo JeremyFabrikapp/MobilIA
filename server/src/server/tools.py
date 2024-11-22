@@ -57,13 +57,13 @@ async def get_journey_info(start: str, destination: str, datetime_str: str = Non
         return "Unable to fetch journey information. Please check the provided locations and try again."
 
 
-tavily_tool = TavilySearchResults(
-    max_results=5,
-    include_answer=True,
-    description=(
-        "This is a search tool for accessing the internet.\n\n"
-        "Let the user know you're asking your friend Tavily for help before you call the tool."
-    ),
-)
+# tavily_tool = TavilySearchResults(
+#     max_results=5,
+#     include_answer=True,
+#     description=(
+#         "This is a search tool for accessing the internet.\n\n"
+#         "Let the user know you're asking your friend Tavily for help before you call the tool."
+#     ),
+# )
 
 TOOLS = [add, get_journey_info, check_address]

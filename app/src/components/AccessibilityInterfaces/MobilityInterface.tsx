@@ -9,6 +9,7 @@ import { geocode, reverseGeocode } from '../../api/geocoding';
 import { AddressInput } from './AddressInput';
 import { AccessibilityFeatures } from './AccessibilityFeatures';
 import { EquipmentStatus } from './EquipmentStatus';
+import { getCurrentLocation } from '../../utils/geolocation';
 
 export function MobilityInterface() {
   const { disabilities, hasDisability } = usePreferences();
@@ -21,11 +22,7 @@ export function MobilityInterface() {
 
   const handleGeolocation = async () => {
     try {
-      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject);
-      });
-      const { latitude, longitude } = position.coords;
-      const address = await reverseGeocode(latitude, longitude);
+      const { address } = await getCurrentLocation();
       setDeparture(address);
     } catch (error) {
       console.error('Erreur de géolocalisation:', error);

@@ -59,7 +59,8 @@ async def connect(*, api_key: str, model: str, url: str) -> AsyncGenerator[
     try:
 
         async def send_event(event: dict[str, Any] | str) -> None:
-            formatted_event = json.dumps(event) if isinstance(event, dict) else event
+            formatted_event = json.dumps(
+                event) if isinstance(event, dict) else event
             await websocket.send(formatted_event)
 
         async def event_stream() -> AsyncIterator[dict[str, Any]]:
@@ -79,7 +80,8 @@ class VoiceToolExecutor(BaseModel):
     """
 
     tools_by_name: dict[str, BaseTool]
-    _trigger_future: asyncio.Future = PrivateAttr(default_factory=asyncio.Future)
+    _trigger_future: asyncio.Future = PrivateAttr(
+        default_factory=asyncio.Future)
     _lock: asyncio.Lock = PrivateAttr(default_factory=asyncio.Lock)
 
     async def _trigger_func(self) -> dict:  # returns a tool call
@@ -109,7 +111,7 @@ class VoiceToolExecutor(BaseModel):
             args = json.loads(tool_call["arguments"])
         except json.JSONDecodeError:
             raise ValueError(
-                f"failed to parse arguments `{tool_call['arguments']}`. Must be valid JSON."
+                f"Failed to parse arguments: '{tool_call['arguments']}'. Arguments must be valid JSON."
             )
 
         async def run_tool() -> dict:
@@ -218,7 +220,15 @@ class OpenAIVoiceReactAgent(BaseModel):
                         "input_audio_transcription": {
                             "model": "whisper-1",
                         },
+                        "turn_detection": {
+                            "type": "server_vad",
+                            "threshold": 0.5,
+                            "prefix_padding_ms": 300,
+                            "silence_duration_ms": 500
+                        },
                         "tools": tool_defs,
+                        "temperature": 0.8,
+                        "max_response_output_tokens": "inf"
                     },
                 }
             )
@@ -229,7 +239,8 @@ class OpenAIVoiceReactAgent(BaseModel):
             ):
                 try:
                     data = (
-                        json.loads(data_raw) if isinstance(data_raw, str) else data_raw
+                        json.loads(data_raw) if isinstance(
+                            data_raw, str) else data_raw
                     )
                 except json.JSONDecodeError:
                     print("error decoding data:", data_raw)
@@ -241,6 +252,8 @@ class OpenAIVoiceReactAgent(BaseModel):
                     print("tool output", data)
                     await model_send(data)
                     await model_send({"type": "response.create", "response": {}})
+                    await send_output_chunk(json.dumps({"type": "tools.tool_outputs", "response": data}))
+
                 elif stream_key == "output_speaker":
 
                     t = data["type"]
@@ -254,10 +267,14 @@ class OpenAIVoiceReactAgent(BaseModel):
                     elif t == "response.function_call_arguments.done":
                         print("tool call", data)
                         await tool_executor.add_tool_call(data)
+                        await send_output_chunk(json.dumps(data))
+
                     elif t == "response.audio_transcript.done":
                         print("model:", data["transcript"])
+                        await send_output_chunk(json.dumps(data))
                     elif t == "conversation.item.input_audio_transcription.completed":
                         print("user:", data["transcript"])
+                        await send_output_chunk(json.dumps(data))
                     elif t in EVENTS_TO_IGNORE:
                         pass
                     else:

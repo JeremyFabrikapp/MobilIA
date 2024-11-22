@@ -2,7 +2,8 @@ import React from 'react';
 import { MapContainer, TileLayer, Polyline, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Icon } from 'leaflet';
-import { MapPin, Accessibility } from 'lucide-react';
+import { Accessibility } from 'lucide-react';
+import { Journey, Section } from '../../api/directions';
 
 // Fix for default marker icons in React-Leaflet
 const defaultIcon = new Icon({
@@ -14,24 +15,41 @@ const defaultIcon = new Icon({
 });
 
 interface MapViewProps {
-  startPoint: [number, number];
-  endPoint: [number, number];
-  waypoints: [number, number][];
-  accessiblePoints: Array<{
-    position: [number, number];
-    type: 'elevator' | 'ramp';
-    status: 'operational' | 'maintenance';
-  }>;
+  journeys: Journey[];
 }
 
-export function MapView({ startPoint, endPoint, waypoints, accessiblePoints }: MapViewProps) {
-  const pathPoints = [startPoint, ...waypoints, endPoint];
-  const bounds = pathPoints.map(point => point);
+export function MapView({ journeys }: MapViewProps) {
+  if (journeys.length === 0) return null;
+
+  const journey = journeys[0]; // We'll display the first journey for now
+
+  const getCoordinates = (section: Section): [number, number] | null => {
+    if (section.from && section.from) {
+      return [section.from.coordinates.lon, section.from.coordinates.lat];
+    }
+    return null;
+  };
+
+  const pathPoints = journey.sections
+    .map(getCoordinates)
+    .filter((coord): coord is [number, number] => coord !== null);
+
+  const startPoint = pathPoints[0];
+  const endPoint = pathPoints[pathPoints.length - 1];
+
+  const accessiblePoints = journey.sections
+    .filter(section => section.type === 'transfer' && section.mode === 'walking')
+    .map(section => ({
+      position: getCoordinates(section) as [number, number],
+      type: 'elevator' as const,
+      status: section.disruptions.length > 0 ? 'maintenance' as const : 'operational' as const
+    }))
+    .filter(point => point.position !== null);
 
   return (
     <div className="h-[60vh] w-full rounded-lg overflow-hidden shadow-lg">
       <MapContainer
-        bounds={bounds}
+        bounds={pathPoints}
         className="h-full w-full"
         zoom={13}
         center={startPoint}
@@ -83,7 +101,7 @@ export function MapView({ startPoint, endPoint, waypoints, accessiblePoints }: M
         ))}
 
         {/* Waypoint markers */}
-        {waypoints.map((point, index) => (
+        {pathPoints.slice(1, -1).map((point, index) => (
           <Marker key={index} position={point} icon={defaultIcon}>
             <Popup>Point de passage {index + 1}</Popup>
           </Marker>

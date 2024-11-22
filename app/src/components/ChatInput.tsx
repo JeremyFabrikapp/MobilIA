@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Send, Mic } from 'lucide-react';
+import { useRealtime } from '../hooks/realtime';
 
 interface ChatInputProps {
   onSendMessage: (message: string) => void;
@@ -7,6 +8,7 @@ interface ChatInputProps {
 
 export function ChatInput({ onSendMessage }: ChatInputProps) {
   const [message, setMessage] = useState('');
+  const { isAudioOn, startAudio, stopAudio } = useRealtime();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -16,15 +18,24 @@ export function ChatInput({ onSendMessage }: ChatInputProps) {
     }
   };
 
+  const handleAudioToggle = () => {
+    if (isAudioOn) {
+      stopAudio();
+    } else {
+      startAudio();
+    }
+  };
+
   return (
     <form onSubmit={handleSubmit} className="p-4 border-t border-gray-200 bg-white">
       <div className="flex gap-2">
         <button
           type="button"
-          aria-label="Activer la reconnaissance vocale"
-          className="p-2 text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
+          aria-label={isAudioOn ? "Désactiver la reconnaissance vocale" : "Activer la reconnaissance vocale"}
+          className={`p-2 ${isAudioOn ? 'text-red-600 bg-red-50' : 'text-blue-600 hover:bg-blue-50'} rounded-full transition-colors`}
+          onClick={handleAudioToggle}
         >
-          <Mic className="h-6 w-6" />
+          <Mic className={`h-6 w-6 ${isAudioOn ? 'animate-pulse' : ''}`} />
         </button>
         <input
           type="text"

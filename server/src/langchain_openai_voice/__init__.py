@@ -128,6 +128,7 @@ class VoiceToolExecutor(BaseModel):
                     "call_id": tool_call["call_id"],
                     "type": "function_call_output",
                     "output": result_str,
+                    "args": json.dumps(args),
                 },
             }
 

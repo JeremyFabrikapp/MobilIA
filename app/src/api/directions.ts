@@ -39,7 +39,7 @@ export async function getDirections(
   wheelchair: boolean = false
 ): Promise<Journey[]> {
   try {
-    const response = await axios.get('http://localhost:3100/api/directions', {
+    const response = await axios.get('http://localhost:8000/api/directions', {
       params: {
         origin_long: originLong,
         origin_lat: originLat,

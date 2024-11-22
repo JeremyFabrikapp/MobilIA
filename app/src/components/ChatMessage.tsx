@@ -25,14 +25,19 @@ export function ChatMessage({ message, journey, isBot }: ChatMessageProps) {
           )}
         </div>
         <div className="flex-1">
-          <p className="text-gray-800 leading-relaxed">{message}</p>
+          <p className="text-gray-800 leading-relaxed whitespace-pre-wrap">{message}</p>
           {journey && (
-            <button
-              onClick={() => setShowItinerary(true)}
-              className="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-            >
-              Voir l'itinéraire
-            </button>
+             <ItineraryView 
+             inline
+             journey={journey} 
+             onClose={() => setShowItinerary(false)} 
+           />
+            // <button
+            //   onClick={() => setShowItinerary(true)}
+            //   className="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+            // >
+            //   Voir l'itinéraire
+            // </button>
           )}
         </div>
       </div>

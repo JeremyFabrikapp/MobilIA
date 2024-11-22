@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { getCurrentLocation } from '../utils/geolocation';
 
 interface ReverseGeocodeResult {
     features: {
@@ -22,6 +23,8 @@ interface ReverseGeocodeResult {
 }
 
 export async function reverseGeocode(lat: number, lon: number): Promise<string> {
+
+    
     try {
         const response = await axios.get<ReverseGeocodeResult>(
             `https://api-adresse.data.gouv.fr/reverse/?lon=${lon}&lat=${lat}`
@@ -64,8 +67,9 @@ interface GeocodeResult {
 
 export async function geocode(address: string): Promise<{ lat: number; lon: number; label: string }> {
     try {
+        const { latitude, longitude } = await getCurrentLocation();
         const response = await axios.get<GeocodeResult>(
-            `https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(address)}&limit=1`
+            `https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(address)}&limit=5&lat=${latitude}&lon=${longitude}`
         );
 
         if (response.data.features.length > 0) {

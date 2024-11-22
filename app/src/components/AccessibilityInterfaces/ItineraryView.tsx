@@ -1,42 +1,72 @@
-import React from 'react';
-import { Clock, ArrowRight, Menu, GalleryVertical, AlertCircle } from 'lucide-react';
-import { Journey, Section } from '../../api/directions';
+import React from "react";
+import {
+  Clock,
+  ArrowRight,
+  Menu,
+  GalleryVertical,
+  AlertCircle,
+} from "lucide-react";
+import { Journey, Section } from "../../api/directions";
+import clsx from "clsx";
 
 interface ItineraryViewProps {
   journey: Journey;
   onClose: () => void;
+  inline?: boolean;
 }
 
-export function ItineraryView({ journey, onClose }: ItineraryViewProps) {
-  const from = journey.sections[0]?.from || '';
-  const to = journey.sections[journey.sections.length - 1]?.to || '';
+export function ItineraryView({
+  journey,
+  onClose,
+  inline = false,
+}: ItineraryViewProps) {
+  const from = journey.sections[0]?.from || "";
+  const to = journey.sections[journey.sections.length - 1]?.to || "";
   const duration = `${Math.floor(journey.duration / 60)} min`;
 
   const getSteps = (sections: Section[]) => {
     return sections.map((section) => ({
-      instruction: `${section.type === 'street_network' ? 'Marcher' : section.mode || 'Voyager'} de ${section.from || ''} à ${section.to || ''}`,
-      duration: `${Math.floor((new Date(section.arrival_time).getTime() - new Date(section.departure_time).getTime()) / 60000)} min`,
-      hasElevator: section.type === 'transfer' && section.mode === 'walking',
-      hasStairs: section.type === 'transfer' && section.mode === 'walking',
-      alert: section.disruptions.length > 0 ? section.disruptions[0].messages.join('. ') : undefined,
+      instruction: `${
+        section.type === "street_network"
+          ? "Marcher"
+          : section.mode || "Voyager"
+      } de ${section.from || ""} à ${section.to || ""}`,
+      duration: `${Math.floor(
+        (new Date(section.arrival_time).getTime() -
+          new Date(section.departure_time).getTime()) /
+          60000
+      )} min`,
+      hasElevator: section.type === "transfer" && section.mode === "walking",
+      hasStairs: section.type === "transfer" && section.mode === "walking",
+      alert:
+        section.disruptions.length > 0
+          ? section.disruptions[0].messages.join(". ")
+          : undefined,
     }));
   };
 
   const steps = getSteps(journey.sections);
 
   return (
-    <div className="fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
+    <div
+      className={clsx(
+        "backdrop-blur-sm z-[9999] flex items-center justify-center p-4",
+        !inline && "fixed inset-0 bg-gray-900/50 "
+      )}
+    >
       <div className="relative bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
         <div className="sticky top-0 p-6 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 z-10">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-2xl font-bold">Itinéraire accessible</h3>
-            <button
-              onClick={onClose}
-              className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-            >
-              ✕
-            </button>
-          </div>
+          {!inline && (
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-2xl font-bold">Itinéraire accessible</h3>
+              <button
+                onClick={onClose}
+                className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              >
+                ✕
+              </button>
+            </div>
+          )}
           <div className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
             <Clock className="h-5 w-5" />
             <span>{duration}</span>
@@ -79,7 +109,9 @@ export function ItineraryView({ journey, onClose }: ItineraryViewProps) {
                   {step.alert && (
                     <div className="flex items-start gap-2 text-red-600 bg-red-50 dark:bg-red-900/30 p-3 rounded-lg mt-2">
                       <AlertCircle className="h-5 w-5 flex-shrink-0" />
-                      <span dangerouslySetInnerHTML={{ __html: step.alert }}></span>
+                      <span
+                        dangerouslySetInnerHTML={{ __html: step.alert }}
+                      ></span>
                     </div>
                   )}
                 </div>

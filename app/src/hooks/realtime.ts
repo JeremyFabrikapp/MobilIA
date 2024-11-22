@@ -1,83 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
+import { Player } from '../lib/player';
+import { Recorder } from '../lib/recorder';
 import { getCurrentLocation } from '../utils/geolocation';
+import { Journey } from '../api/directions';
 
-const BUFFER_SIZE = 4800;
+const BUFFER_SIZE = 4096;
 
-class Player {
-    private playbackNode: AudioWorkletNode | null = null;
-
-    async init(sampleRate: number) {
-        const audioContext = new AudioContext({ sampleRate });
-        await audioContext.audioWorklet.addModule("/audio-playback-worklet.js");
-
-        this.playbackNode = new AudioWorkletNode(audioContext, "audio-playback-worklet");
-        this.playbackNode.connect(audioContext.destination);
-    }
-
-    play(buffer: Int16Array) {
-        if (this.playbackNode) {
-            this.playbackNode.port.postMessage(buffer);
-        }
-    }
-
-    stop() {
-        if (this.playbackNode) {
-            this.playbackNode.port.postMessage(null);
-        }
-    }
-}
-
-class Recorder {
-    private audioContext: AudioContext | null = null;
-    private mediaStream: MediaStream | null = null;
-    private mediaStreamSource: MediaStreamAudioSourceNode | null = null;
-    private workletNode: AudioWorkletNode | null = null;
-
-    constructor(private onDataAvailable: (data: ArrayBuffer) => void) { }
-
-    async start(stream: MediaStream) {
-        try {
-            if (this.audioContext) {
-                await this.audioContext.close();
-            }
-
-            this.audioContext = new AudioContext({ sampleRate: 24000 });
-
-            await this.audioContext.audioWorklet.addModule("/audio-processor-worklet.js");
-
-            this.mediaStream = stream;
-            this.mediaStreamSource = this.audioContext.createMediaStreamSource(this.mediaStream);
-
-            this.workletNode = new AudioWorkletNode(this.audioContext, "audio-processor-worklet");
-            this.workletNode.port.onmessage = (event) => {
-                this.onDataAvailable(event.data.buffer);
-            };
-
-            this.mediaStreamSource.connect(this.workletNode);
-            this.workletNode.connect(this.audioContext.destination);
-        } catch (error) {
-            console.error('Error starting recorder:', error);
-            this.stop();
-        }
-    }
-
-    async stop() {
-        if (this.mediaStream) {
-            this.mediaStream.getTracks().forEach(track => track.stop());
-            this.mediaStream = null;
-        }
-
-        if (this.audioContext) {
-            await this.audioContext.close();
-            this.audioContext = null;
-        }
-
-        this.mediaStreamSource = null;
-        this.workletNode = null;
-    }
-}
-
-export const useRealtime = () => {
+export const useRealtime = (onNewMessage?: (message: string, isBot: boolean, journeys?: Journey[]) => void) => {
     const [isAudioOn, setIsAudioOn] = useState(false);
     const [audioPlayer] = useState(() => new Player());
     const [audioRecorder, setAudioRecorder] = useState<Recorder | null>(null);
@@ -85,38 +14,37 @@ export const useRealtime = () => {
 
     const [currentLocation, setCurrentLocation] = useState<{ latitude: number; longitude: number } | null>(null);
 
-    useEffect(() => {
-        let intervalId: NodeJS.Timeout;
+    // useEffect(() => {
+    //     let intervalId: NodeJS.Timeout;
 
-        return;
-        const sendLocation = async () => {
-            try {
-                const { latitude, longitude } = await getCurrentLocation();
-                setCurrentLocation({ latitude, longitude });
+    //     const sendLocation = async () => {
+    //         try {
+    //             const { latitude, longitude } = await getCurrentLocation();
+    //             setCurrentLocation({ latitude, longitude });
 
-                if (webSocket && webSocket.readyState === WebSocket.OPEN) {
-                    webSocket.send(JSON.stringify({
-                        type: 'location_update',
-                        latitude,
-                        longitude
-                    }));
-                }
-            } catch (error) {
-                console.error('Error getting or sending location:', error);
-            }
-        };
+    //             if (webSocket && webSocket.readyState === WebSocket.OPEN) {
+    //                 webSocket.send(JSON.stringify({
+    //                     type: 'location_update',
+    //                     latitude,
+    //                     longitude
+    //                 }));
+    //             }
+    //         } catch (error) {
+    //             console.error('Error getting or sending location:', error);
+    //         }
+    //     };
 
-        if (isAudioOn) {
-            sendLocation(); // Send immediately when audio starts
-            intervalId = setInterval(sendLocation, 30000); // Then every 30 seconds
-        }
+    //     if (isAudioOn) {
+    //         sendLocation(); // Send immediately when audio starts
+    //         intervalId = setInterval(sendLocation, 30000); // Then every 30 seconds
+    //     }
 
-        return () => {
-            if (intervalId) {
-                clearInterval(intervalId);
-            }
-        };
-    }, [isAudioOn, webSocket]);
+    //     return () => {
+    //         if (intervalId) {
+    //             clearInterval(intervalId);
+    //         }
+    //     };
+    // }, [isAudioOn, webSocket]);
 
     const startAudio = useCallback(async () => {
         try {
@@ -176,18 +104,32 @@ export const useRealtime = () => {
         if (webSocket) {
             webSocket.onmessage = (event) => {
                 const data = JSON.parse(event.data);
+                const handleTranscription = (transcript: string, isAIResponse: boolean) => {
+                    console.log(`${isAIResponse ? 'AI' : 'User'} transcription:`, transcript);
+                    if (typeof onNewMessage === 'function') {
+                        onNewMessage?.(transcript, isAIResponse);
+                    } else {
+                        // console.error('onNewMessage is not a function', onNewMessage);
+                    }
+                };
+
                 if (data?.type === 'conversation.item.input_audio_transcription.completed') {
-                    console.log('User input transcription:', data.transcript);
-                }
-                if (data?.type === 'response.audio_transcript.done') {
-                    console.log('AI response transcription:', data.transcript);
+                    handleTranscription(data.transcript, false);
+                } else if (data?.type === 'response.audio_transcript.done') {
+                    handleTranscription(data.transcript, true);
                 }
                 if (data?.type === 'response.function_call_arguments.done') {
                     console.log('AI function_call_arguments:', data.transcript);
                 }
                 if (data?.type === 'tools.tool_outputs') {
+                    console.log('Received tool output:', data);
+                    const args = JSON.parse(data.response.item.args);
                     const output = JSON.parse(data.response.item.output);
                     console.log('tools.tool_outputs:', output);
+                    if (args.start && output.length > 0) {
+                        onNewMessage?.("Voici les résultats : ", true, output);
+                    }
+
                 }
                 if (data?.type !== 'response.audio.delta') return;
 
@@ -198,11 +140,11 @@ export const useRealtime = () => {
                 audioPlayer.play(pcmData);
             };
         }
-    }, [webSocket, audioPlayer]);
+    }, [webSocket, audioPlayer, onNewMessage]);
 
     return {
         isAudioOn,
         startAudio,
         stopAudio
     };
-};
+}

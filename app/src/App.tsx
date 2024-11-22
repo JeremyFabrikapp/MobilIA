@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Menu, MoonStar, Sun, Globe2 } from 'lucide-react';
+import { Menu, MoonStar, Sun, Globe2, Mic } from 'lucide-react';
 import { WelcomeScreen } from './components/WelcomeScreen';
 import { ChatInterface } from './components/ChatInterface';
 import { VisualInterface } from './components/AccessibilityInterfaces/VisualInterface';
@@ -58,9 +58,10 @@ function App() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setCurrentInterface('chat')}
-              className="px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+              className="px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 flex items-center"
             >
-              Assistant
+              <Mic className="h-4 w-4 mr-2" />
+              Assistant Vocal
             </button>
             <button
               onClick={() => setIsDarkMode(!isDarkMode)}

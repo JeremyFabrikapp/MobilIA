@@ -37,6 +37,70 @@ async def check_address(address: str):
     except Exception as e:
         return f"An unexpected error occurred: {str(e)}"
 
+import base64
+import requests
+from typing import Optional
+
+@tool
+async def analyze_image(image_url: str, prompt: Optional[str] = None):
+    """
+    Analyze an image using GPT-4 Vision and return a description.
+    PS : If there is any text, you must read it to the user.
+    Let the user know you're analyzing the image before calling this tool.
+
+    :param image_url: The URL of the image to analyze
+    :param prompt: Optional. A specific prompt to guide the image analysis
+    :return: A description of the image
+    """
+    try:
+        # Fetch the image
+        response = requests.get(image_url)
+        response.raise_for_status()
+        image_data = response.content
+
+        # Encode the image to base64
+        base64_image = base64.b64encode(image_data).decode('utf-8')
+
+        # Prepare the payload for the OpenAI API
+        payload = {
+            "model": "gpt-4o",
+            "messages": [
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": prompt if prompt else "Peux tu me dire ce qui est écrit sur cette image ?"
+                        },
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": f"data:image/jpeg;base64,{base64_image}"
+                            }
+                        }
+                    ]
+                }
+            ],
+            "max_tokens": 300
+        }
+
+        # Make the API call
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {os.getenv('OPENAI_API_KEY')}"
+        }
+        api_response = requests.post("https://api.openai.com/v1/chat/completions", json=payload, headers=headers)
+        api_response.raise_for_status()
+
+        # Extract and return the description
+        result = api_response.json()
+        return result['choices'][0]['message']['content']
+
+    except requests.RequestException as e:
+        return f"Error fetching or analyzing the image: {str(e)}"
+    except Exception as e:
+        return f"An unexpected error occurred: {str(e)}"
+
 
 @tool
 async def get_journey_info(start: str, destination: str, datetime_str: str = None, wheelchair: bool = False):
@@ -66,4 +130,4 @@ async def get_journey_info(start: str, destination: str, datetime_str: str = Non
 #     ),
 # )
 
-TOOLS = [add, get_journey_info, check_address]
+TOOLS = [add, get_journey_info, check_address, analyze_image]

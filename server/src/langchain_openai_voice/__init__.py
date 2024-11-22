@@ -217,6 +217,7 @@ class OpenAIVoiceReactAgent(BaseModel):
                 {
                     "type": "session.update",
                     "session": {
+                        "voice": "alloy",
                         "instructions": self.instructions,
                         "input_audio_transcription": {
                             "model": "whisper-1",
@@ -233,6 +234,30 @@ class OpenAIVoiceReactAgent(BaseModel):
                     },
                 }
             )
+            # Send image classification request to the model
+            await model_send({
+                # "event_id": "event_345",
+                "type": "conversation.item.create",
+                "item": {
+                    "role": "user",
+                    "type": "message",
+                    "content": [
+                        {
+                            "type": "input_text",
+                            "text": "What's in this image? If there is some text, write the full transcript, keeping the same language. Image : https://storage.googleapis.com/fabrik_bucket_public_1/screenshots/1200x680_maxnewsfrfour369278.jpg"
+                        },
+                        # {
+                        #     "type": "image_url",
+                        #     "image_url": {
+                        #         "url": "https://upload.wikimedia.org/wikipedia/commons/9/99/Brooks_Chase_Ranger_of_Jolly_Dogs_Jack_Russell.jpg",
+                        #     },
+                        # },
+                    ],
+                }
+            })
+            await model_send({"type": "response.create", "response": {}})
+
+            # return;
             async for stream_key, data_raw in amerge(
                 input_mic=input_stream,
                 output_speaker=model_receive_stream,

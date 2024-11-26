@@ -65,21 +65,22 @@ interface GeocodeResult {
     }[];
 }
 
-export async function geocode(address: string): Promise<{ lat: number; lon: number; label: string }> {
+export async function geocode(address: string): Promise<{ lat: number; lon: number; label: string }[]> {
     try {
         const { latitude, longitude } = await getCurrentLocation();
         const response = await axios.get<GeocodeResult>(
-            `https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(address)}&limit=5&lat=${latitude}&lon=${longitude}`
+            `https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(address)}&limit=10&lat=${latitude}&lon=${longitude}`
         );
 
         if (response.data.features.length > 0) {
-            const feature = response.data.features[0];
-            const [lon, lat] = feature.geometry.coordinates;
-            return {
-                lat,
-                lon,
-                label: feature.properties.label
-            };
+            return response.data.features.map(feature => {
+                const [lon, lat] = feature.geometry.coordinates;
+                return {
+                    lat,
+                    lon,
+                    label: feature.properties.label
+                };
+            });
         } else {
             throw new Error('No coordinates found for the given address');
         }

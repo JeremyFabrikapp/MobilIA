@@ -48,8 +48,10 @@ class DirectionsAPI:
         """
         try:
             # Geocode start and finish points
-            start_coords = await self.geocoding_api.geocode(start)
-            finish_coords = await self.geocoding_api.geocode(finish)
+            start_coords_suggestions = await self.geocoding_api.geocode(start)
+            finish_coords_suggestions = await self.geocoding_api.geocode(finish)
+            start_coords = start_coords_suggestions[0];
+            finish_coords = finish_coords_suggestions[0];
 
             # Get journey info using the geocoded coordinates
             journey_info = await self.get_journey_info(

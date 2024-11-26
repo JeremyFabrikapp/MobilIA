@@ -234,27 +234,41 @@ class OpenAIVoiceReactAgent(BaseModel):
                     },
                 }
             )
-            # Send image classification request to the model
-            await model_send({
-                # "event_id": "event_345",
+            welcome_message = {
                 "type": "conversation.item.create",
                 "item": {
-                    "role": "user",
+                    "role": "system",
                     "type": "message",
                     "content": [
                         {
-                            "type": "input_text",
-                            "text": "What's in this image? If there is some text, write the full transcript, keeping the same language. Image : https://storage.googleapis.com/fabrik_bucket_public_1/screenshots/1200x680_maxnewsfrfour369278.jpg"
-                        },
-                        # {
-                        #     "type": "image_url",
-                        #     "image_url": {
-                        #         "url": "https://upload.wikimedia.org/wikipedia/commons/9/99/Brooks_Chase_Ranger_of_Jolly_Dogs_Jack_Russell.jpg",
-                        #     },
-                        # },
+                            "type": "text",
+                            "text": "Tu es le chatbot de IDFMobilités. Tu es la pour aider l'utilisateur à trouver le meilleur moyen de se déplacer. Par exemple, accueille l'utilisateur avec : Bienvenue sur l'assistance Île-de-France Mobilité ! Comment puis-je vous aider aujourd'hui ?"
+                        }
                     ],
                 }
-            })
+            }
+            await model_send(welcome_message)
+            # # Send image classification request to the model
+            # await model_send({
+            #     # "event_id": "event_345",
+            #     "type": "conversation.item.create",
+            #     "item": {
+            #         "role": "user",
+            #         "type": "message",
+            #         "content": [
+            #             {
+            #                 "type": "input_text",
+            #                 "text": "What's in this image? If there is some text, write the full transcript, keeping the same language. Image : https://storage.googleapis.com/fabrik_bucket_public_1/screenshots/1200x680_maxnewsfrfour369278.jpg"
+            #             },
+            #             # {
+            #             #     "type": "image_url",
+            #             #     "image_url": {
+            #             #         "url": "https://upload.wikimedia.org/wikipedia/commons/9/99/Brooks_Chase_Ranger_of_Jolly_Dogs_Jack_Russell.jpg",
+            #             #     },
+            #             # },
+            #         ],
+            #     }
+            # })
             await model_send({"type": "response.create", "response": {}})
 
             # return;

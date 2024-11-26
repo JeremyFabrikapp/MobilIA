@@ -4,3 +4,5 @@ server/src/langchain_openai_voice/__pycache__/
 server/src/server/__pycache__/
 server/.env
 server/src/server/.env
+api/run.sh
+server/run.sh

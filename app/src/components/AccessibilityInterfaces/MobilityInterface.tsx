@@ -40,10 +40,10 @@ export function MobilityInterface() {
       const wheelchair = hasDisability("mobility");
 
       const fetchedJourneys = await getDirections(
-        departureCoords.lon,
-        departureCoords.lat,
-        arrivalCoords.lon,
-        arrivalCoords.lat,
+        departureCoords[0].lon,
+        departureCoords[0].lat,
+        arrivalCoords[0].lon,
+        arrivalCoords[0].lat,
         dateTime,
         wheelchair
       );

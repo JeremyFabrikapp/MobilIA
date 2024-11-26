@@ -8,7 +8,7 @@ interface Message {
   id: number;
   text: string;
   isBot: boolean;
-  journey?: Journey;
+  journeys?: Journey[];
 }
 
 export function ChatInterface() {
@@ -33,13 +33,22 @@ export function ChatInterface() {
       if (journeys && journeys.length > 0) {
         setMessages((prevMessages) => [
           ...prevMessages,
-          ...journeys.map((journey) => ({
+          {
             id: Date.now(),
             text,
             isBot,
-            journey,
-          })),
+            journeys // Corrected from 'journey' to 'journeys'
+          }
         ]);
+        // setMessages((prevMessages) => [
+        //   ...prevMessages,
+        //   ...journeys.map((journey) => ({
+        //     id: Date.now(),
+        //     text,
+        //     isBot,
+        //     journey,
+        //   })),
+        // ]);
       } else {
         setMessages((prevMessages) => [
           ...prevMessages,
@@ -79,7 +88,7 @@ export function ChatInterface() {
             key={message.id}
             message={message.text}
             isBot={message.isBot}
-            journey={message.journey}
+            journeys={message.journeys}
           />
         ))}
       </div>

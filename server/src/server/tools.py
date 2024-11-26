@@ -27,11 +27,19 @@ async def check_address(address: str):
         from server.geocode import GeocodingAPI
         geocoding_api = GeocodingAPI()
         result = await geocoding_api.geocode(address)
-        return {
-            "latitude": result["lat"],
-            "longitude": result["lon"],
-            "full_address": result["label"]
-        }
+        results_list = []
+        for item in result:
+            results_list.append({
+                "latitude": item["lat"],
+                "longitude": item["lon"],
+                "full_address": item["label"]
+            })
+        return results_list
+        # return {
+        #     "latitude": result["lat"],
+        #     "longitude": result["lon"],
+        #     "full_address": result["label"]
+        # }
     except ValueError as e:
         return f"Error: {str(e)}"
     except Exception as e:

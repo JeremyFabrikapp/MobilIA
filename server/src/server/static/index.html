@@ -124,7 +124,7 @@
             try {
 
                 // handle output -> speaker stuff
-                const wsUrl = window.location.hostname === 'localhost' ? 'ws://localhost:8000/ws' : 'ws://mobilia-581527456637.europe-west1.run.app/ws';
+                const wsUrl = window.location.hostname === 'localhost' ? 'wss://localhost:8000/ws' : 'wss://mobilia-581527456637.europe-west1.run.app/ws';
                 const ws = new WebSocket(wsUrl);
 
                 const audioPlayer = new Player();

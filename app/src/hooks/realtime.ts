@@ -48,7 +48,7 @@ export const useRealtime = (onNewMessage?: (message: string, isBot: boolean, jou
 
     const startAudio = useCallback(async () => {
         try {
-            const ws = new WebSocket("ws://localhost:8000/ws");
+            const ws = new WebSocket(process.env.REACT_APP_WS_URL || 'ws://localhost:8000/ws');
             setWebSocket(ws);
 
             await audioPlayer.init(24000);

@@ -18,14 +18,16 @@ RUN pip install --no-cache-dir --upgrade pip
 # Install uv
 RUN pip install --no-cache-dir uv
 
-# Install any needed packages specified in requirements.txt
-RUN uv pip install --no-cache-dir -r requirements.txt
+# Create a virtual environment
+RUN uv venv
 
-# Install any needed packages specified in pyproject.toml
-RUN uv pip install --no-cache-dir .
+# Activate the virtual environment and install dependencies
+RUN . .venv/bin/activate && \
+    uv pip install --no-cache-dir -r requirements.txt && \
+    uv pip install --no-cache-dir .
 
 # Make the port provided by GCP Cloud Run available
 EXPOSE $PORT
 
 # Run the application using the port provided by GCP Cloud Run
-CMD ["sh", "-c", "uv run src/server/app.py"]
+CMD ["sh", "-c", ". .venv/bin/activate && uv run src/server/app.py"]

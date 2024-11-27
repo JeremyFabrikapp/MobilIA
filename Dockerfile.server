@@ -1,0 +1,20 @@
+# Use an official Python runtime as a parent image
+FROM python:3.10-slim
+
+# Set the working directory in the container
+WORKDIR /app
+
+# Copy the current directory contents into the container at /app
+COPY ./server /app
+
+# Install any needed packages specified in pyproject.toml
+RUN pip install --no-cache-dir poetry
+RUN poetry config virtualenvs.create false
+RUN poetry install --no-dev
+
+# Make port 8000 available to the world outside this container
+# Make the port provided by GCP Cloud Run available
+EXPOSE $PORT
+
+# Run the application using the port provided by GCP Cloud Run
+CMD ["sh", "-c", "uvicorn src.server.main:app --host 0.0.0.0 --port $PORT"]

@@ -7,12 +7,20 @@ WORKDIR /app
 # Copy the current directory contents into the container at /app
 COPY ./server /app
 
-# Install any needed packages specified in pyproject.toml
-RUN pip install --no-cache-dir -r requirements.txt
-RUN poetry config virtualenvs.create false
-RUN poetry install --no-dev
+# Install build dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
 
-# Make port 8000 available to the world outside this container
+# Install pip and upgrade it
+RUN pip install --no-cache-dir --upgrade pip
+
+# Install any needed packages specified in requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Install any needed packages specified in pyproject.toml
+RUN pip install --no-cache-dir .
+
 # Make the port provided by GCP Cloud Run available
 EXPOSE $PORT
 

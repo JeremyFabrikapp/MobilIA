@@ -25,4 +25,4 @@ RUN pip install --no-cache-dir .
 EXPOSE $PORT
 
 # Run the application using the port provided by GCP Cloud Run
-CMD ["sh", "-c", "uvicorn src.server.main:app --host 0.0.0.0 --port $PORT"]
+CMD ["sh", "-c", "uvicorn src.server.app:app --host 0.0.0.0 --port $PORT"]

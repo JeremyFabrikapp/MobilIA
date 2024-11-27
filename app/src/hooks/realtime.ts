@@ -48,7 +48,7 @@ export const useRealtime = (onNewMessage?: (message: string, isBot: boolean, jou
 
     const startAudio = useCallback(async () => {
         try {
-            const wsUrl = process.env.REACT_APP_WS_URL;
+            const wsUrl = process.env.VITE_APP_WS_URL;
             if (!wsUrl) {
                 throw new Error('WebSocket URL is not defined. Please check your environment variables.');
             }

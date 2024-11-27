@@ -15,14 +15,17 @@ RUN apt-get update && apt-get install -y \
 # Install pip and upgrade it
 RUN pip install --no-cache-dir --upgrade pip
 
+# Install uv
+RUN pip install --no-cache-dir uv
+
 # Install any needed packages specified in requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
+RUN uv pip install --no-cache-dir -r requirements.txt
 
 # Install any needed packages specified in pyproject.toml
-RUN pip install --no-cache-dir .
+RUN uv pip install --no-cache-dir .
 
 # Make the port provided by GCP Cloud Run available
 EXPOSE $PORT
 
 # Run the application using the port provided by GCP Cloud Run
-CMD ["sh", "-c", "uvicorn src.server.app:app --host 0.0.0.0 --port $PORT"]
+CMD ["sh", "-c", "uv run src/server/app.py"]

@@ -120,6 +120,9 @@ export const useRealtime = (onNewMessage?: (message: string, isBot: boolean, jou
     useEffect(() => {
         if (webSocket) {
             webSocket.onmessage = (event) => {
+                if(event.data === "ping"){
+                    return;
+                }
                 const data = JSON.parse(event.data);
                 const handleTranscription = (transcript: string, isAIResponse: boolean) => {
                     console.log(`${isAIResponse ? 'AI' : 'User'} transcription:`, transcript);

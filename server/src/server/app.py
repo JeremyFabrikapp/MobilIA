@@ -9,6 +9,7 @@ from starlette.routing import Route, WebSocketRoute
 from starlette.staticfiles import StaticFiles
 from starlette.websockets import WebSocket
 from starlette.requests import Request
+import asyncio
 
 from langchain_openai_voice import OpenAIVoiceReactAgent
 
@@ -38,17 +39,28 @@ middleware = [
 
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
+    
+    keep_alive_task = asyncio.create_task(keep_alive(websocket))
+    
+    try:
+        # Your existing WebSocket logic here
+        browser_receive_stream = websocket_stream(websocket)
+        agent = OpenAIVoiceReactAgent(
+            model="gpt-4o-realtime-preview",
+            tools=TOOLS,
+            instructions=INSTRUCTIONS,
+        )
+        await agent.aconnect(browser_receive_stream, websocket.send_text)
+    finally:
+        keep_alive_task.cancel()
 
-    browser_receive_stream = websocket_stream(websocket)
-
-    agent = OpenAIVoiceReactAgent(
-        model="gpt-4o-realtime-preview",
-        tools=TOOLS,
-        instructions=INSTRUCTIONS,
-    )
-
-    await agent.aconnect(browser_receive_stream, websocket.send_text)
-
+async def keep_alive(websocket: WebSocket):
+    while True:
+        try:
+            await websocket.send_text('ping')
+            await asyncio.sleep(30)  # Send a ping every 30 seconds
+        except Exception:
+            break
 
 async def homepage(request):
     with open("src/server/static/index.html") as f:

@@ -54,6 +54,19 @@ export const useRealtime = (onNewMessage?: (message: string, isBot: boolean, jou
             }
             const ws = new WebSocket(wsUrl);
             setWebSocket(ws);
+            // Wait for the WebSocket connection to be established
+            await new Promise<void>((resolve, reject) => {
+                ws.onopen = () => {
+                    console.log('WebSocket connection opened');
+                    resolve();
+                };
+                ws.onerror = (error) => {
+                    console.error('WebSocket connection error:', error);
+                    reject(error);
+                };
+            });
+
+            console.log('WebSocket connection established');
 
             await audioPlayer.init(24000);
 
